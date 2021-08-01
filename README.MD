@@ -62,7 +62,7 @@ vagrant box remove -f centos-7-5
 vagrant destroy -f
 ```
 
- - Опубликовал свой образ, изменил его приватность на видимый
+ - Опубликовал свой образ, изменил его приватность на видимый `https://app.vagrantup.com/ProfMalina/boxes/centos-7-5`
 
 ```
 cd ../packer
@@ -81,4 +81,38 @@ vagrant ssh
 uname -r
 exit
 vagrant destroy -f
+```
+
+$ HW1*
+- Обновление gcc до версии выше 4.90
+
+- Сборка ядра из исходников
+
+```
+sudo -i
+yum update -y
+yum install -y ncurses-devel make gcc bc bison flex elfutils-libelf-devel openssl-devel grub2 wget
+
+yum groupinstall -y "Development Tools"
+yum install -y centos-release-scl
+yum install -y devtoolset-7
+scl enable devtoolset-7 bash
+gcc --version
+
+cd /usr/src/
+wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.13.7.tar.xz
+tar -xvf linux-5.13.7.tar.xz 
+cd linux-5.13.7
+cp -v /boot/config-3.10.0-1127.el7.x86_64 /usr/src/linux-5.13.7/.config
+make menuconfig
+make bzImage
+make modules
+make modules_install
+make
+make install
+grub2-mkconfig -o /boot/grub2/grub.cfg
+grub2-set-default 0
+reboot
+vagrant ssh 
+uname -r # 5.13.7
 ```
