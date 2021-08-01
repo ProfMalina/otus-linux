@@ -116,3 +116,7 @@ reboot
 vagrant ssh 
 uname -r # 5.13.7
 ```
+
+# shared_folders
+
+- изменил `config.vm.synced_folder ".", "/vagrant", disabled: true` на `config.vm.synced_folder ".", "/vagrant", type: "rsync"` и заработало
