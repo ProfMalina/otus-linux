@@ -1,122 +1,36 @@
-# HW1
+# HW2
 
- - Установил Packer (vagrant и vmbox установлены до занятий)
+Добавил еще 2 диска в Vagrantfile
 
-```
-curl https://releases.hashicorp.com/packer/1.4.4/packer_1.4.4_linux_amd64.zip | sudo gzip -d > /usr/local/bin/packer && sudo chmod +x /usr/local/bin/packer
-echo "export PATH=/usr/local/bin/packer:$PATH" >> ~/.bashrc
-```
+Добавил скрипт который создает raid5
 
- - Создал собственный репозиторий и втеку под ДЗ, скачал туда содержимое `https://github.com/dmitry-lyutenko/manual_kernel_update`
+Поднял vm для поломки и починки raid(комманды закоммичены в скрипте)
 
-```
-git init
-git remote add origin git@github.com:ProfMalina/otus-linux.git
-git branch -M main
-git add .
-git commit -m "initial"
-git push --set-upstream origrn main
-git checkout -b 01_manual_kernel_update
-```
-
- - Выполнил действия согласно заданию
+Добавил в скрипт разбивку и монтирование
 
 ```
-vagrant up
-vagrant ssh
-sudo yum install -y http://www.elrepo.org/elrepo-release-7.0-3.el7.elrepo.noarch.rpm
-sudo yum --enablerepo elrepo-kernel install kernel-ml -y
-sudo grub2-mkconfig -o /boot/grub2/grub.cfg
-sudo grub2-set-default 0
-sudo reboot
-vagrant ssh
+    otuslinux: Filesystem      Size  Used Avail Use% Mounted on
+    otuslinux: devtmpfs        489M     0  489M   0% /dev
+    otuslinux: tmpfs           496M     0  496M   0% /dev/shm
+    otuslinux: tmpfs           496M  6.7M  489M   2% /run
+    otuslinux: tmpfs           496M     0  496M   0% /sys/fs/cgroup
+    otuslinux: /dev/sdg1        40G  6.4G   34G  16% /
+    otuslinux: tmpfs           100M     0  100M   0% /run/user/1000
+    otuslinux: /dev/md1p1       45M  1.1M   40M   3% /mnt/folder1
+    otuslinux: /dev/md1p2       45M  1.1M   40M   3% /mnt/folder2
+    otuslinux: /dev/md1p3       45M  1.1M   40M   3% /mnt/folder3
+    otuslinux: /dev/md1p4       45M  1.1M   40M   3% /mnt/folder4
+    otuslinux: /dev/md1p5       45M  1.1M   40M   3% /mnt/folder5
 ```
 
- - После перезапуска проверил успешность выполненых действий
+# HW with **
+
+ - перенос с одного диска в RAID
 
 ```
-uname -r
-exit
+[root@otuslinux ~]# lsblk
+NAME   MAJ:MIN RM SIZE RO TYPE MOUNTPOINT
+sda      8:0    0  40G  0 disk 
+sdb      8:16   0  40G  0 disk 
+`-sdb1   8:17   0  40G  0 part /
 ```
-
- - Собрал образ
-
-```
-cd packer
-packer build centos.json
-```
-
- - Провёл тестирование
-
-```
-vagrant box add --name centos-7-5 centos-7.7.1908-kernel-5-x86_64-Minimal.box
-vagrant box list
-mkdir ../test
-cd ../test
-vagrant init centos-7-5
-vagrant up
-vagrant ssh
-uname -r  # 5.13.7-1.el7.elrepo.x86_64
-exit
-vagrant box remove -f centos-7-5
-vagrant destroy -f
-```
-
- - Опубликовал свой образ, изменил его приватность на видимый `https://app.vagrantup.com/ProfMalina/boxes/centos-7-5`
-
-```
-cd ../packer
-vagrant cloud auth login # You are now logged in.
-vagrant cloud publish -f --release ProfMalina/centos-7-5 1.0 virtualbox centos-7.7.1908-kernel-5-x86_64-Minimal.box
-```
-
- - Добавил свой образ в Vagrantfile и проверил работоспособность
-
- :box_name => "ProfMalina/centos-7-5",
-
-```
-cd ..
-vagrant up
-vagrant ssh
-uname -r
-exit
-vagrant destroy -f
-```
-
-$ HW1*
-- Обновление gcc до версии выше 4.90
-
-- Сборка ядра из исходников
-
-```
-sudo -i
-yum update -y
-yum install -y ncurses-devel make gcc bc bison flex elfutils-libelf-devel openssl-devel grub2 wget
-
-yum groupinstall -y "Development Tools"
-yum install -y centos-release-scl
-yum install -y devtoolset-7
-scl enable devtoolset-7 bash
-gcc --version
-
-cd /usr/src/
-wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.13.7.tar.xz
-tar -xvf linux-5.13.7.tar.xz 
-cd linux-5.13.7
-cp -v /boot/config-3.10.0-1127.el7.x86_64 /usr/src/linux-5.13.7/.config
-make menuconfig
-make bzImage
-make modules
-make modules_install
-make
-make install
-grub2-mkconfig -o /boot/grub2/grub.cfg
-grub2-set-default 0
-reboot
-vagrant ssh 
-uname -r # 5.13.7
-```
-
-# shared_folders
-
-- изменил `config.vm.synced_folder ".", "/vagrant", disabled: true` на `config.vm.synced_folder ".", "/vagrant", type: "rsync"` и заработало
