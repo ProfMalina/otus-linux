@@ -1,1 +1,5 @@
-.vagrant
+.vagrant/
+packer/packer_cache/
+centos-7.7.1908-kernel-5-x86_64-Minimal.box
+packer/build*
+test.sh
