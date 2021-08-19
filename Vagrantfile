@@ -4,27 +4,15 @@
 Vagrant.configure(2) do |config|
   config.vm.box = "centos/7"
 
-#  config.vm.provision "ansible" do |ansible|
-#    ansible.verbose = "vvv"
-#    ansible.playbook = "playbook.yml"
-#    ansible.become = "true"
-#  end
-
   config.vm.provider "virtualbox" do |v|
-    v.memory = 256
-    v.cpus = 1
+    v.memory = 2048
+    v.cpus = 2
   end
 
-  config.vm.define "nfss" do |nfss|
+  config.vm.define "package" do |nfss|
     nfss.vm.network "private_network", ip: "192.168.50.10", virtualbox__intnet: "net1"
-    nfss.vm.hostname = "nfss"
-    nfss.vm.provision "shell", path: "server.sh"
-  end
-
-  config.vm.define "nfsc" do |nfsc|
-    nfsc.vm.network "private_network", ip: "192.168.50.11", virtualbox__intnet: "net1"
-    nfsc.vm.hostname = "nfsc"
-    nfsc.vm.provision "shell", path: "client.sh"
+    nfss.vm.hostname = "package"
+    nfss.vm.provision "shell", path: "pre_install.sh"
   end
 
 end
