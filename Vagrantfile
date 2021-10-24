@@ -1,17 +1,36 @@
 # -*- mode: ruby -*-
-# vi: set ft=ruby :
+# vim: set ft=ruby :
 
-Vagrant.configure(2) do |config|
-  config.vm.box = "centos/7"
+MACHINES = {
+  :bash => {
+        :box_name => "centos/7",
+        :ip_addr => '192.168.11.101'
+  }
+}
 
-  config.vm.provider "virtualbox" do |v|
-    v.memory = 2048
-    v.cpus = 2
+Vagrant.configure("2") do |config|
+
+  MACHINES.each do |boxname, boxconfig|
+
+      config.vm.define boxname do |box|
+
+          box.vm.box = boxconfig[:box_name]
+          box.vm.host_name = boxname.to_s
+
+          #box.vm.network "forwarded_port", guest: 3260, host: 3260+offset
+
+          box.vm.network "private_network", ip: boxconfig[:ip_addr]
+
+          box.vm.provider :virtualbox do |vb|
+            vb.customize ["modifyvm", :id, "--memory", "256"]
+          end
+          
+          box.vm.provision "shell", inline: <<-SHELL
+            sed -i "s|20/Jul/2021|$(date +'%d/%b/%Y')|i" /vagrant/access.log
+            echo "0 * * * * /vagrant/bashscript.sh example@example.com" > cronfile
+            crontab cronfile
+            rm -rf cronfile
+          SHELL
+      end
   end
-
-  config.vm.define "system-boot" do |nfss|
-    nfss.vm.network "private_network", ip: "192.168.50.10", virtualbox__intnet: "net1"
-    nfss.vm.hostname = "system-boot"
-  end
-
 end
