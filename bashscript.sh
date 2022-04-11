@@ -15,6 +15,8 @@ ACCESS_LOG=/vagrant/access.log
 
 # Sendmail
 MAIL_ADDR=$1
+X=$2
+Y=$3
 
 # Send report
 report()
@@ -37,6 +39,10 @@ Requested URLs:
 
 ${URLS[@]}
 
+Errors:
+
+${ERRO[@]}
+
 Response codes:
 
 ${RESPONSE[@]}
@@ -53,9 +59,10 @@ then
 else
         echo "$$" > $LOCKFILE
         trap 'rm -f $LOCKFILE; exit $?' INT TERM EXIT
-        ADDR+=$(grep "$DATE_HOUR_AGO" $ACCESS_LOG | awk '{print $1}' | sort | uniq -c | sort -nr | head)
-        URLS+=$(grep "$DATE_HOUR_AGO" $ACCESS_LOG | grep -Pio '(?<=GET|POST).*(?=HTTP/1.1")' | sort | uniq -c | sort -nr | head)
-        RESPONSE+=$(grep "$DATE_HOUR_AGO" $ACCESS_LOG | grep -Pio '(?<=HTTP/1.1").*(?=(\s\d*\s"-"))' | sort | uniq -c | sort -nr)
+        ADDR+=$(grep "$DATE_HOUR_AGO" $ACCESS_LOG | awk '{print $1}' | sort | uniq -c | sort -nr | head -n $2)
+        URLS+=$(grep "$DATE_HOUR_AGO" $ACCESS_LOG | awk '{print $7}' | sort | uniq -c | sort -nr | head -n $3)
+        ERRO+=$(grep "$DATE_HOUR_AGO" $ACCESS_LOG | grep -v 200)
+        RESPONSE+=$(grep "$DATE_HOUR_AGO" $ACCESS_LOG | awk '{print $9}' | sort | uniq -c | sort -nr)
         report
         rm -rf $LOCKFILE
         trap - INT TERM EXIT

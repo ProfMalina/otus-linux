@@ -17,8 +17,6 @@ Vagrant.configure("2") do |config|
           box.vm.box = boxconfig[:box_name]
           box.vm.host_name = boxname.to_s
 
-          #box.vm.network "forwarded_port", guest: 3260, host: 3260+offset
-
           box.vm.network "private_network", ip: boxconfig[:ip_addr]
 
           box.vm.provider :virtualbox do |vb|
@@ -27,7 +25,7 @@ Vagrant.configure("2") do |config|
           
           box.vm.provision "shell", inline: <<-SHELL
             sed -i "s|20/Jul/2021|$(date +'%d/%b/%Y')|i" /vagrant/access.log
-            echo "0 * * * * /vagrant/bashscript.sh example@example.com" > cronfile
+            echo "0 * * * * /vagrant/bashscript.sh example@example.com 5 10" > cronfile
             crontab cronfile
             rm -rf cronfile
           SHELL
